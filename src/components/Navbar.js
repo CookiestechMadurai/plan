@@ -75,7 +75,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-main">
         <div className="nav-left">
-          <div className="navbar-logo">PlanOra</div>
+          <div className="navbar-logo" onClick={() => navigate('/home')}>PlanOra</div>
         </div>
 
         <div className="nav-center">
@@ -165,6 +165,7 @@ const Navbar = () => {
         .navbar-logo {
           font-size: 1.5rem;
           font-weight: bold;
+          cursor: pointer;
         }
 
         .navbar-search {

@@ -24,7 +24,7 @@ const Login = () => {
       }
 
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/home');
+      navigate('/home', { state: { showInstallPrompt: true } });
     } catch (error) {
       alert(error.message);
     }
@@ -33,12 +33,16 @@ const Login = () => {
   const EyeIcon = ({ visible }) => (
     <div style={styles.eyeIcon} onClick={() => setShowPassword(!showPassword)}>
       {visible ? (
-        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="#333">
-          <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/>
+        // Open eye
+        <svg xmlns="http://www.w3.org/2000/svg" height="22" width="22" viewBox="0 0 24 24" fill="none" stroke="#003f66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+          <circle cx="12" cy="12" r="3" />
         </svg>
       ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="#333">
-          <path d="M12 6c2.5 0 4.71 1.28 6.18 3.26l1.45-1.45C17.99 5.83 15.16 4 12 4c-4.08 0-7.64 2.43-9.24 6 0.5 1.16 1.21 2.2 2.08 3.06L4.27 15l1.42 1.42 15.56-15.56L19.27 0 0 19.27l1.41 1.41 2.72-2.72C6.3 19.13 9.03 20 12 20c4.08 0 7.64-2.43 9.24-6a10.01 10.01 0 00-1.74-2.9l-1.43 1.43A8.02 8.02 0 0120 12c-1.73-3.89-6-7-11-7a9.94 9.94 0 00-3.26.58l1.43 1.43A7.94 7.94 0 0112 6z"/>
+        // New Closed eye
+        <svg xmlns="http://www.w3.org/2000/svg" height="22" width="22" viewBox="0 0 24 24" fill="none" stroke="#003f66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.66 21.66 0 014.56-5.94M1 1l22 22" />
+          <path d="M9.53 9.53a3.5 3.5 0 014.95 4.95" />
         </svg>
       )}
     </div>
@@ -56,14 +60,16 @@ const Login = () => {
         <p style={styles.subtext}>Let's get started by filling out the form below.</p>
 
         <form onSubmit={handleLogin} style={styles.form}>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={styles.input}
-          />
+          <div style={styles.inputWrapper}>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={styles.input}
+            />
+          </div>
 
           <div style={styles.passwordWrapper}>
             <input
@@ -72,7 +78,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{ ...styles.input, paddingRight: '50px' }}
+              style={{ ...styles.input, paddingRight: '40px' }}
             />
             <EyeIcon visible={showPassword} />
           </div>
@@ -135,6 +141,17 @@ const styles = {
     flexDirection: 'column',
     gap: '20px',
   },
+  inputWrapper: {
+    position: 'relative',
+    width: '100%',
+  },
+  passwordWrapper: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+    minHeight: '50px',
+  },
   input: {
     padding: '15px',
     fontSize: '16px',
@@ -143,18 +160,14 @@ const styles = {
     backgroundColor: '#e6efff',
     outline: 'none',
     width: '100%',
-  },
-  passwordWrapper: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
+    boxSizing: 'border-box',
   },
   eyeIcon: {
     position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
     right: '15px',
     cursor: 'pointer',
-    width: '24px',
-    height: '24px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

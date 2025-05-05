@@ -1,11 +1,14 @@
-// src/components/Footer.jsx
 import React from 'react';
-import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+} from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
+import { SiGoogleplay, SiAppstore } from 'react-icons/si';
 
 const Footer = () => (
   <footer style={styles.footer}>
-   
-
     {/* Navigation links */}
     <div style={styles.section}>
       <a href="/about" style={styles.link}>About Us</a>
@@ -19,19 +22,19 @@ const Footer = () => (
     <div style={styles.section}>
       <span style={styles.label}>Connect with us:</span>
       <FaFacebookF style={styles.icon} />
-      <FaTwitter style={styles.icon} />
+      <FaXTwitter style={styles.icon} />
       <FaInstagram style={styles.icon} />
       <FaLinkedinIn style={styles.icon} />
     </div>
 
-    {/* App download badges */}
+    {/* App download icons */}
     <div style={styles.section}>
       <span style={styles.label}>Download Our App:</span>
-      <a href="#" style={styles.appBadge}>
-        <img src={process.env.PUBLIC_URL + '/images/appstore.png'} alt="App Store" style={styles.badgeImage} />
+      <a href="#" style={styles.iconLink}>
+        <SiAppstore style={styles.storeIcon} title="App Store" />
       </a>
-      <a href="#" style={styles.appBadge}>
-        <img src={process.env.PUBLIC_URL + '/images/playstore.png'} alt="Google Play" style={styles.badgeImage} />
+      <a href="https://play.google.com/store/apps/details?id=com.mycompany.plan" target="_blank" rel="noopener noreferrer" style={styles.iconLink}>
+        <SiGoogleplay style={styles.storeIcon} title="Google Play" />
       </a>
     </div>
     <hr style={styles.divider} />
@@ -47,7 +50,7 @@ const Footer = () => (
 
 const styles = {
   footer: {
-    backgroundColor: '#003f66',        // theme color
+    backgroundColor: '#003f66',
     color: '#ffffff',
     padding: '40px 20px',
     textAlign: 'center',
@@ -82,10 +85,6 @@ const styles = {
     margin: '0 8px',
     transition: 'opacity 0.2s',
   },
-  active: {
-    fontWeight: 'bold',
-    opacity: 1,
-  },
   icon: {
     color: '#ffffff',
     fontSize: '18px',
@@ -93,13 +92,16 @@ const styles = {
     opacity: 0.9,
     transition: 'opacity 0.2s',
   },
-  appBadge: {
+  iconLink: {
     display: 'inline-block',
+    color: '#ffffff',
+    fontSize: '28px',
     margin: '0 8px',
+    transition: 'transform 0.2s',
   },
-  badgeImage: {
-    height: '36px',
-    objectFit: 'contain',
+  storeIcon: {
+    color: '#ffffff',
+    cursor: 'pointer',
   },
   brand: {
     fontWeight: 'bold',

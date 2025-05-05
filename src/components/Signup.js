@@ -42,7 +42,6 @@ const Signup = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const { uid } = userCredential.user;
 
-      // Save user data with UID included
       await setDoc(doc(db, 'user', uid), {
         fullName: name,
         email: email,
@@ -88,7 +87,7 @@ const Signup = () => {
           <input type="text" name="name" placeholder="Name" onChange={handleChange} required style={styles.input} />
           <input type="email" name="email" placeholder="Email" onChange={handleChange} required style={styles.input} />
           <input type="tel" name="mobile" placeholder="Mobile No" onChange={handleChange} required style={styles.input} />
-         
+          <input type="text" name="address" placeholder="Address" onChange={handleChange} required style={styles.input} />
 
           <div style={styles.passwordWrapper}>
             <input
@@ -97,19 +96,21 @@ const Signup = () => {
               placeholder="Password"
               onChange={handleChange}
               required
-              style={{ ...styles.input, paddingRight: '50px' }}
+              style={styles.input}
             />
             <EyeIcon visible={showPassword} />
           </div>
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+          <div style={styles.passwordWrapper}>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              onChange={handleChange}
+              required
+              style={styles.input}
+            />
+          </div>
 
           <button type="submit" style={styles.button}>Sign Up</button>
         </form>
@@ -176,6 +177,7 @@ const styles = {
     backgroundColor: '#e6efff',
     outline: 'none',
     width: '100%',
+    boxSizing: 'border-box',
   },
   passwordWrapper: {
     position: 'relative',

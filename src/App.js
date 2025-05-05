@@ -10,6 +10,8 @@ const CompanyDetail = lazy(() => import('./components/CompanyDetail'));
 const Profile = lazy(() => import('./components/Profile'));
 const MessagePage = lazy(() => import('./pages/MessagePage'));
 const PostOrder = lazy(() => import('./pages/PostOrder'));
+const Orders = lazy(() => import('./pages/Orders')); // Lazy load Orders component
+const Cart = lazy(() => import('./pages/Cart')); // Lazy load Cart component
 
 // PrivateRoute component
 function PrivateRoute({ children }) {
@@ -73,7 +75,24 @@ function AppRoutes() {
             </PrivateRoute>
           }
         />
-
+        {/* New Orders route */}
+        <Route
+          path="/orders"
+          element={
+            <PrivateRoute>
+              <Orders />
+            </PrivateRoute>
+          }
+        />
+        {/* New Cart route */}
+        <Route
+          path="/cart"
+          element={
+            <PrivateRoute>
+              <Cart />
+            </PrivateRoute>
+          }
+        />
         {/* Catch-all */}
         <Route path="*" element={<Navigate to={currentUser ? "/home" : "/"} replace />} />
       </Routes>
@@ -84,7 +103,7 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/planora26">
+      <Router basename="/plan">
         <AppRoutes />
       </Router>
     </AuthProvider>

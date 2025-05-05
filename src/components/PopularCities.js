@@ -1,4 +1,3 @@
-// src/components/PopularCities.jsx
 import React, { useState } from 'react';
 import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -41,6 +40,7 @@ const PopularCities = () => {
             key={idx}
             style={styles.cityCard}
             onClick={() => handleCityClick(city.name)}
+            className="city-card"
           >
             <img
               src={city.image}
@@ -88,98 +88,114 @@ const PopularCities = () => {
 
 const styles = {
   wrapper: {
-    backgroundColor: '#003f66',
-    padding: '40px 20px',
-    color: '#fff',
+    backgroundColor: '#003f66', // Light background for contrast
+    padding: '50px 20px',
+    color: '#333', // Darker text for better readability
+    fontFamily: 'Arial, sans-serif',
   },
   heading: {
-    fontSize: '28px',
+    fontSize: '32px',
     fontWeight: 600,
     marginBottom: '30px',
     textAlign: 'center',
+    color: '#ffffff', // Strong accent color
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-    gap: '20px',
-    maxWidth: '1400px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', // Adjust for responsive design
+    gap: '30px',
+    maxWidth: '1300px',
     margin: '0 auto 40px',
   },
   cityCard: {
     backgroundColor: '#fff',
-    borderRadius: '12px',
+    borderRadius: '16px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '15px',
+    padding: '20px',
     cursor: 'pointer',
-    transition: 'transform 0.2s',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease', // Smooth hover effect
+    '&:hover': {
+      transform: 'translateY(-8px)', // Lift effect on hover
+      boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
+    },
   },
   cityImage: {
-    width: '60px',
-    height: '60px',
+    width: '80px',
+    height: '80px',
     borderRadius: '50%',
     objectFit: 'cover',
-    marginBottom: '8px',
+    marginBottom: '12px',
+    transition: 'transform 0.3s ease',
   },
   cityName: {
     color: '#003f66',
     fontWeight: 600,
-    fontSize: '14px',
+    fontSize: '16px',
     textAlign: 'center',
+    marginTop: '10px',
   },
   resultSection: {
-    maxWidth: '1400px',
+    maxWidth: '1300px',
     margin: '0 auto',
   },
   resultHeading: {
-    fontSize: '22px',
+    fontSize: '26px',
     fontWeight: 600,
-    marginBottom: '20px',
+    marginBottom: '30px',
+    color: '#003f66',
   },
   noResults: {
     fontStyle: 'italic',
+    fontSize: '18px',
+    color: '#777',
   },
   scrollRow: {
     display: 'flex',
-    gap: '20px',
+    gap: '25px',
     overflowX: 'auto',
     paddingBottom: '10px',
   },
-  // Fixed-size company boxes:
   resultCard: {
     backgroundColor: '#fff',
-    borderRadius: '12px',
-    width: '200px',      // fixed width
-    height: '260px',     // fixed height
+    borderRadius: '16px',
+    width: '220px',
+    height: '280px',
     flex: '0 0 auto',
     cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '12px',
-    textAlign: 'center',
+    padding: '20px',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease', // Smooth hover effect for result card
+    '&:hover': {
+      transform: 'translateY(-10px)',
+      boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
+    },
   },
   resultImage: {
     width: '100%',
-    height: '140px',
+    height: '150px',
     objectFit: 'cover',
-    borderRadius: '8px',
-    marginBottom: '12px',
+    borderRadius: '12px',
+    marginBottom: '15px',
   },
   resultName: {
     color: '#003f66',
-    fontSize: '16px',
+    fontSize: '18px',
     fontWeight: '600',
-    margin: 0,
-    marginBottom: '6px',
+    marginBottom: '8px',
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
   },
   location: {
     color: '#666',
     fontSize: '14px',
-    margin: 0,
+    margin: '0',
   },
 };
 

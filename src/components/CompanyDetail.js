@@ -23,6 +23,11 @@ const CompanyDetail = () => {
   const [messageText, setMessageText] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderName, setOrderName] = useState('');
+  const [orderMobile, setOrderMobile] = useState('');
+  const [orderDate, setOrderDate] = useState('');
+  const [orderLocation, setOrderLocation] = useState('');
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
@@ -65,6 +70,40 @@ const CompanyDetail = () => {
     await addDoc(collection(db, 'webchat'), messageData);
     setMessageText('');
     fetchMessages();
+  };
+
+  const handlePlaceOrder = () => {
+    setShowOrderModal(true);
+  };
+
+  const handleOrderSubmit = async () => {
+    if (!orderName || !orderMobile || !orderDate || !orderLocation || !currentUser) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    const orderData = {
+      name: orderName,
+      mobilenumber: orderMobile,
+      placelocation: orderLocation,
+      dateofevent: orderDate,
+      status: 'pending',
+      userid: currentUser.uid,
+      vendorid: company.vendorid,
+      businessname: company.businessname,
+      eventname: company.eventname,
+      image: company.image,
+      location: company.location,
+      docid: company.id,
+    };
+
+    await addDoc(collection(db, 'placeorder'), orderData);
+    alert("Order placed successfully!");
+    setShowOrderModal(false);
+    setOrderName('');
+    setOrderMobile('');
+    setOrderDate('');
+    setOrderLocation('');
   };
 
   if (!company) return <p style={styles.loading}>Loading...</p>;
@@ -134,6 +173,12 @@ const CompanyDetail = () => {
           >
             Chat with Vendor
           </button>
+          <button
+            style={{ ...styles.chatButton, backgroundColor: '#10b981', marginLeft: '10px' }}
+            onClick={handlePlaceOrder}
+          >
+            Place an Order
+          </button>
         </div>
       </div>
 
@@ -178,11 +223,26 @@ const CompanyDetail = () => {
           <img src={modalImage} alt="Menu" style={styles.modalImage} />
         </div>
       )}
+
+      {showOrderModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.orderModal}>
+            <h2 style={{ marginBottom: '16px', color: '#005f7f' }}>Place Your Order</h2>
+            <input style={styles.modalInput} placeholder="Your Name" value={orderName} onChange={e => setOrderName(e.target.value)} />
+            <input style={styles.modalInput} placeholder="Mobile Number" value={orderMobile} onChange={e => setOrderMobile(e.target.value)} />
+            <input style={styles.modalInput} type="date" value={orderDate} onChange={e => setOrderDate(e.target.value)} />
+            <input style={styles.modalInput} placeholder="Event Location" value={orderLocation} onChange={e => setOrderLocation(e.target.value)} />
+            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+              <button style={styles.sendBtn} onClick={handleOrderSubmit}>Submit</button>
+              <button style={styles.chatButton} onClick={() => setShowOrderModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Reusable Info Box Component
 const InfoBox = ({ icon, label, value }) => (
   <div style={styles.infoBox}>
     <div style={styles.infoHeader}>
@@ -370,6 +430,24 @@ const styles = {
     maxWidth: '90%',
     maxHeight: '90%',
     borderRadius: '8px',
+  },
+  orderModal: {
+    backgroundColor: '#fff',
+    padding: '24px',
+    borderRadius: '12px',
+    width: '90%',
+    maxWidth: '400px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+  },
+  modalInput: {
+    marginBottom: '12px',
+    padding: '10px',
+    fontSize: '15px',
+    borderRadius: '6px',
+    border: '1px solid #ccc',
+    outline: 'none',
   },
   loading: {
     color: '#005f7f',

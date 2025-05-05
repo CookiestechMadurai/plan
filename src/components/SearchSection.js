@@ -141,9 +141,9 @@ const styles = {
   card: {
     width: '100%',
     height: '150px',
-    backgroundColor: '#ffffff',
-    border: '1px solid #ddd',
-    borderRadius: '12px',
+    // backgroundColor: '#ffffff',
+    // border: '1px solid #ddd',
+    // borderRadius: '12px',
     textAlign: 'center',
     padding: '10px',
     boxSizing: 'border-box',
@@ -151,14 +151,14 @@ const styles = {
     transition: 'transform 0.2s ease',
   },
   image: {
-    width: '80px',
-    height: '80px',
+    width: '120px',
+    height: '120px',
     borderRadius: '50%',
     objectFit: 'cover',
     marginBottom: '10px'
   },
   label: {
-    color: '#003f66',
+    color: '#ffffff',
     fontWeight: '600',
     fontSize: '14px'
   },

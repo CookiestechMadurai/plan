@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   collection,
   query,
@@ -14,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getAuth } from 'firebase/auth';
-import Navbar from '../components/Navbar'; // ✅ Import Navbar
+import Navbar from '../components/Navbar';
 
 const MessagePage = () => {
   const [senders, setSenders] = useState([]);
@@ -25,6 +26,18 @@ const MessagePage = () => {
   const auth = getAuth();
   const currentUser = auth.currentUser;
   const chatEndRef = useRef(null);
+  const location = useLocation();
+
+  // Get query params from URL and set selected sender
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const vendorId = searchParams.get('vendorId');
+    const vendorName = searchParams.get('vendorName');
+
+    if (vendorId && vendorName) {
+      setSelectedSender({ senderId: vendorId, senderName: vendorName });
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const fetchFullName = async () => {
@@ -97,11 +110,12 @@ const MessagePage = () => {
     setNewMessage('');
   }, [newMessage, currentUser, selectedSender, fullName]);
 
-  const fmtTime = ts => ts?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const fmtTime = ts =>
+    ts?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div style={styles.pageWrapper}>
-      <Navbar /> {/* ✅ Navbar added here */}
+      <Navbar />
       <div style={styles.container}>
         <div style={styles.sidebar}>
           <h3 style={styles.sidebarHeader}>Chats</h3>
@@ -146,7 +160,9 @@ const MessagePage = () => {
                           <span style={styles.metaStatus}>
                             {msg.status === 'sent' && '✓'}
                             {msg.status === 'delivered' && '✓✓'}
-                            {msg.status === 'seen' && <span style={{ color: '#34B7F1' }}>✓✓</span>}
+                            {msg.status === 'seen' && (
+                              <span style={{ color: '#34B7F1' }}>✓✓</span>
+                            )}
                           </span>
                         )}
                       </div>
@@ -190,7 +206,7 @@ const styles = {
     overflow: 'hidden',
     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
     backgroundColor: '#ffffff',
-    marginTop: '60px', // To avoid overlap with fixed Navbar (if it's fixed)
+    marginTop: '60px',
   },
   sidebar: {
     width: '30%',
