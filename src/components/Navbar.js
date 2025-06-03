@@ -1,43 +1,151 @@
-// src/components/Navbar.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FaBars,
   FaTimes,
   FaSearch,
   FaShoppingCart,
   FaUser,
-  FaEnvelope
+  FaEnvelope,
+  FaRobot // AI icon
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
+const categoriesList = [
+  'Photography', 'Food', 'Music', 'Catering', 'Venue', 'Return Gift',
+  'Travel', 'DJ', 'Cakes & Bakery', 'Decoration', 'Orchestra',
+  'Wedding', 'Beautician', 'Other'
+];
+
 const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [aiBoxOpen, setAiBoxOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+
+  useEffect(() => {
+    if (aiBoxOpen && chatMessages.length === 0) {
+      setChatMessages([{ sender: 'claura', text: 'Hi, welcome this is ms.Claura your ai assistant. Say hi to begin' }]);
+      setChatStep('initial');
+    }
+  }, [aiBoxOpen]);
+  const [userInput, setUserInput] = useState('');
+  const [chatStep, setChatStep] = useState('initial'); // initial, waitingForHi, eventName, categories, budget, results
+  const [eventName, setEventName] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [budget, setBudget] = useState('');
+  const chatEndRef = useRef(null);
   const navigate = useNavigate();
   const auth = getAuth();
   const user = auth.currentUser;
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (!user) return;
-      try {
-        const q = query(
-          collection(db, 'webchat'),
-          where('receiverId', '==', user.uid),
-          orderBy('time', 'desc')
-        );
-        await getDocs(q); // Not used for display in navbar currently
-      } catch (err) {
-        console.error('Error fetching messages:', err);
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages]);
+
+  const addMessage = (sender, text) => {
+    setChatMessages(prev => [...prev, { sender, text }]);
+  };
+
+  const handleUserInputChange = (e) => {
+    setUserInput(e.target.value);
+  };
+
+  const delay = ms => new Promise(res => setTimeout(res, ms));
+
+  const handleUserInputSubmit = async (e) => {
+    e.preventDefault();
+    const input = userInput.trim();
+    if (!input) return;
+
+    addMessage('user', input);
+    setUserInput('');
+
+    if (chatStep === 'initial') {
+      if (input.toLowerCase().startsWith('hi')) {
+        setTimeout(() => {
+          addMessage('claura', 'What is your event name?');
+          setChatStep('eventName');
+        }, 1000);
+      } else {
+        addMessage('claura', 'Please say "hi" to continue.');
       }
-    };
-    fetchMessages();
-  }, [user]);
+      return;
+    }
+
+    if (chatStep === 'eventName') {
+      setEventName(input);
+      await delay(3000);
+      addMessage('claura', `Thanks! Your event name is "${input}". What categories do you need? Please select from below.`);
+      setChatStep('categories');
+    } else if (chatStep === 'budget') {
+      if (isNaN(Number(input)) || Number(input) <= 0) {
+        addMessage('claura', 'Please enter a valid positive number for budget.');
+        return;
+      }
+      setBudget(input);
+      addMessage('claura', `Great! Searching companies under budget ${input}...`);
+      setChatStep('results');
+      await fetchCompanies(input, selectedCategories);
+    }
+  };
+
+  const handleCategorySelect = (category) => {
+    let newSelected;
+    if (selectedCategories.includes(category)) {
+      newSelected = selectedCategories.filter(c => c !== category);
+    } else {
+      newSelected = [...selectedCategories, category];
+    }
+    setSelectedCategories(newSelected);
+  };
+
+  const handleCategoriesConfirm = () => {
+    if (selectedCategories.length === 0) {
+      addMessage('claura', 'Please select at least one category.');
+      return;
+    }
+    addMessage('user', `Selected categories: ${selectedCategories.join(', ')}`);
+    addMessage('claura', 'What is your budget? Please enter a number.');
+    setChatStep('budget');
+  };
+
+  const fetchCompanies = async (budgetLimit, categories) => {
+    setLoading(true);
+    try {
+      let q;
+      if (categories.length > 0) {
+        q = query(
+          collection(db, 'postorder'),
+          where('eventname', 'in', categories)
+        );
+      } else {
+        q = query(collection(db, 'postorder'));
+      }
+      const snap = await getDocs(q);
+      let companiesList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      companiesList = companiesList.filter(c => c.minprice <= Number(budgetLimit));
+      if (companiesList.length === 0) {
+        addMessage('claura', 'No companies found under your budget and selected categories.');
+      } else {
+        addMessage('claura', 'Here are the companies under your budget:');
+        companiesList.forEach(c => {
+          addMessage('claura', `${c.businessname} - Minimum Price: ${c.minprice}`);
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching companies:', err);
+      addMessage('claura', 'Sorry, there was an error fetching companies.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = async (e) => {
     const qText = e.target.value;
@@ -65,17 +173,45 @@ const Navbar = () => {
   };
 
   const handleSelect = (company) => {
+    if (!user) {
+      navigate('/login');
+      setMenuOpen(false);
+      return;
+    }
     navigate(`/company/${company.id}`);
     setSearchQuery('');
     setCompanies([]);
     setMenuOpen(false);
   };
 
+  const handleNavClick = (path) => {
+    if (!user) {
+      navigate('/login');
+      setMenuOpen(false);
+      return;
+    }
+    navigate(path);
+    setMenuOpen(false);
+  };
+
+  const handleAiButtonClick = () => {
+    setAiBoxOpen(prev => !prev);
+    if (!aiBoxOpen) {
+      // Reset chat on open
+      setChatMessages([]);
+      setChatStep('initial');
+      setEventName('');
+      setSelectedCategories([]);
+      setBudget('');
+      setUserInput('');
+    }
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-main">
         <div className="nav-left">
-          <div className="navbar-logo" onClick={() => navigate('/home')}>PlanOra</div>
+          <div className="navbar-logo" onClick={() => navigate('/home')}>Planora</div>
         </div>
 
         <div className="nav-center">
@@ -111,12 +247,13 @@ const Navbar = () => {
 
         <div className="nav-right">
           <ul className={`nav-links ${menuOpen ? 'active' : ''}`}>
-            <li onClick={() => { navigate('/home'); setMenuOpen(false); }}>Home</li>
-            <li onClick={() => { navigate('/orders'); setMenuOpen(false); }}>Orders</li>
-            <li onClick={() => { navigate('/post-order'); setMenuOpen(false); }}>Post Order</li>
-            <li onClick={() => { navigate('/profile'); setMenuOpen(false); }}><FaUser /> Profile</li>
-            <li onClick={() => { navigate('/messages'); setMenuOpen(false); }}><FaEnvelope /> Messages</li>
-            <li onClick={() => { navigate('/cart'); setMenuOpen(false); }}><FaShoppingCart /> Cart</li>
+            <li onClick={() => handleNavClick('/home')}>Home</li>
+            <li onClick={() => handleNavClick('/orders')}>Orders</li>
+            <li onClick={() => handleNavClick('/post-order')}>Post Order</li>
+            <li onClick={handleAiButtonClick}><FaRobot /> AI</li>
+            <li onClick={() => handleNavClick('/profile')}><FaUser /> Profile</li>
+            <li onClick={() => handleNavClick('/messages')}><FaEnvelope /> Messages</li>
+            <li onClick={() => handleNavClick('/cart')}><FaShoppingCart /> Cart</li>
           </ul>
         </div>
 
@@ -124,6 +261,88 @@ const Navbar = () => {
           {menuOpen ? <FaTimes /> : <FaBars />}
         </div>
       </div>
+
+      {aiBoxOpen && (
+        <div className="ai-chat-box">
+          <div className="chat-messages">
+            {chatMessages.map((msg, index) => (
+              <div
+                key={index}
+                className={`chat-message ${msg.sender === 'claura' ? 'claura' : 'user'}`}
+              >
+                {msg.text}
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+          {chatStep === 'categories' ? (
+            <div className="categories-buttons">
+              {categoriesList.map(category => (
+                <button
+                  key={category}
+                  className={selectedCategories.includes(category) ? 'category-btn selected' : 'category-btn'}
+                  onClick={() => handleCategorySelect(category)}
+                >
+                  {category}
+                </button>
+              ))}
+              <button className="confirm-btn" onClick={handleCategoriesConfirm}>Confirm</button>
+            </div>
+          ) : (
+            <>
+              {chatStep === 'budget' ? (
+                <div className="budget-slider-container">
+                <input
+                  type="range"
+                  min="500"
+                  max="1000000"
+                  step="100"
+                  value={budget || 500}
+                  onChange={(e) => setBudget(Number(e.target.value))}
+                />
+                <input
+                  type="number"
+                  min="500"
+                  max="1000000"
+                  step="100"
+                  value={budget || 500}
+                  onChange={(e) => {
+                    let val = Number(e.target.value);
+                    if (val < 500) val = 500;
+                    else if (val > 1000000) val = 1000000;
+                    setBudget(val);
+                  }}
+                  style={{ marginTop: '10px', padding: '5px', borderRadius: '5px', border: 'none', fontSize: '1rem' }}
+                />
+                <div className="budget-value">Selected Budget: {budget || 500}</div>
+                <button className="confirm-btn" onClick={() => {
+                  if (!budget || isNaN(Number(budget)) || Number(budget) < 500) {
+                    addMessage('claura', 'Please select a budget between 500 and 1,000,000.');
+                    return;
+                  }
+                  addMessage('user', `Selected budget: ${budget}`);
+                  addMessage('claura', `Great! Searching companies under budget ${budget}...`);
+                  setChatStep('results');
+                  fetchCompanies(budget, selectedCategories);
+                }}>Confirm</button>
+              </div>
+              ) : (
+                <form className="chat-input-form" onSubmit={handleUserInputSubmit}>
+                  <input
+                    type="text"
+                    placeholder="Type your message..."
+                    value={userInput}
+                    onChange={handleUserInputChange}
+                    autoFocus
+                    disabled={chatStep === 'categories' || chatStep === 'results'}
+                  />
+                  <button type="submit" disabled={chatStep === 'categories' || chatStep === 'results'}>Send</button>
+                </form>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       <style>{`
         * {
@@ -176,7 +395,7 @@ const Navbar = () => {
           border-radius: 20px;
           display: flex;
           align-items: center;
-          padding: 0.3rem 0.75rem;
+          padding: 0.3rem 0.65rem;
         }
 
         .navbar-search input {
@@ -227,7 +446,7 @@ const Navbar = () => {
         .nav-links {
           list-style: none;
           display: flex;
-          gap: 1.5rem;
+          gap: 1.9rem;
           align-items: center;
         }
 
@@ -238,35 +457,199 @@ const Navbar = () => {
           transition: background 0.2s;
           display: flex;
           align-items: center;
-          gap: 0.3rem;
+          gap: 0.2rem;
+          white-space: nowrap;
         }
 
         .nav-links li:hover {
           background: rgba(255, 255, 255, 0.2);
         }
 
+        .ai-chat-box {
+          position: absolute;
+          top: 60px;
+          right: 10px;
+          width: 400px;
+          max-height: 600px;
+          background: #ffffff; /* Changed to white background */
+          color: #333333; /* Dark text for contrast */
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          z-index: 1100;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .chat-messages {
+          flex: 1;
+          padding: 1rem;
+          overflow-y: auto;
+          background: #ffffff; /* white background for chat messages */
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .chat-message {
+          max-width: 80%;
+          padding: 12px 20px;
+          border-radius: 20px;
+          font-size: 1rem;
+          line-height: 1.4;
+          word-wrap: break-word;
+          white-space: pre-wrap;
+        }
+
+        .chat-message.claura {
+          background: #0078d7; /* bright blue for AI messages */
+          color: #fff;
+          align-self: flex-start;
+          border-bottom-left-radius: 0;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .chat-message.user {
+          background: #e1e1e1; /* light gray for user messages */
+          color: #333333;
+          align-self: flex-end;
+          border-bottom-right-radius: 0;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .chat-input-form {
+          display: flex;
+          padding: 10px;
+          background: #f5f5f5; /* light background for input area */
+          border-top: 1px solid #ddd;
+        }
+
+        .chat-input-form input {
+          flex: 1;
+          border: none;
+          border-radius: 10px;
+          padding: 10px 15px;
+          font-size: 1rem;
+          background: #fff;
+          color: #333;
+          outline: none;
+        }
+
+        .chat-input-form input::placeholder {
+          color: #999;
+        }
+
+        .chat-input-form button {
+          background: #0078d7;
+          border: none;
+          color: white;
+          padding: 0 20px;
+          margin-left: 10px;
+          border-radius: 10px;
+          cursor: pointer;
+          font-size: 1rem;
+          transition: background 0.3s;
+        }
+
+        .chat-input-form button:hover {
+          background: #005a99;
+        }
+
+        .categories-buttons {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          padding: 10px;
+          background: #40414f;
+          border-top: 1px solid #52525b;
+          border-radius: 0 0 15px 15px;
+        }
+
+        .category-btn {
+          background: #303136;
+          color: #fff;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: background 0.3s;
+        }
+
+        .category-btn.selected {
+          background: #10a37f;
+        }
+
+        .category-btn:hover {
+          background: #50535a;
+        }
+
+        .confirm-btn {
+          background: #10a37f;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          margin-left: auto;
+          transition: background 0.3s;
+        }
+
+        .confirm-btn:hover {
+          background: #0e8e6e;
+        }
+
         @media (max-width: 768px) {
-          .nav-center {
-            order: 3;
-            width: 100%;
-            margin-top: 10px;
+          .ai-chat-box {
+            width: 90%;
+            right: 5%;
+            bottom: 10px;
+            max-height: 400px;
           }
-
-          .nav-right {
-            width: 100%;
-            justify-content: center;
-          }
-
-          .nav-links {
-            display: ${menuOpen ? 'flex' : 'none'};
-            flex-direction: column;
-            width: 100%;
-            margin-top: 1rem;
-          }
-
-          .hamburger {
-            display: block;
-          }
+        }
+        .budget-slider-container {
+          display: flex;
+          flex-direction: column;
+          padding: 10px;
+          background: #40414f;
+          border-top: 1px solid #52525b;
+          border-radius: 0 0 15px 15px;
+          gap: 10px;
+        }
+        .budget-slider-container input[type="range"] {
+          width: 100%;
+          -webkit-appearance: none;
+          height: 8px;
+          border-radius: 5px;
+          background: #303136;
+          outline: none;
+          cursor: pointer;
+        }
+        .budget-slider-container input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #10a37f;
+          cursor: pointer;
+          border: none;
+          margin-top: -6px;
+        }
+        .budget-slider-container input[type="range"]::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #10a37f;
+          cursor: pointer;
+          border: none;
+        }
+        .budget-value {
+          color: #fff;
+          font-size: 1rem;
+          text-align: center;
         }
       `}</style>
     </nav>

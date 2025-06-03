@@ -8,20 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 const categories = [
-  'Photography',
-  'Food',
-  'Music',
-  'Catering',
-  'Venue',
-  'Return Gift',
-  'Travel',
-  'DJ',
-  'Cakes & Bakery',
-  'Decoration',
-  'Orchestra',
-  'Wedding',
-  'Beautician',
-  'Other'
+  'Photography', 'Food', 'Music', 'Catering', 'Venue', 'Return Gift',
+  'Travel', 'DJ', 'Cakes & Bakery', 'Decoration', 'Orchestra',
+  'Wedding', 'Beautician', 'Other'
 ];
 
 const PostOrder = () => {
@@ -34,6 +23,8 @@ const PostOrder = () => {
   const [location, setLocation] = useState('');
   const [mobilenumber, setMobilenumber] = useState('');
   const [name, setName] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [image, setImage] = useState(null);
   const [menuImages, setMenuImages] = useState([]);
   const [imagePreview, setImagePreview] = useState(null);
@@ -81,12 +72,10 @@ const PostOrder = () => {
     }
     setLoading(true);
     try {
-      // Upload main image
       const mainRef = ref(storage, `users/${user.uid}/${Date.now()}-${image.name}`);
       await uploadBytes(mainRef, image);
       const mainURL = await getDownloadURL(mainRef);
 
-      // Upload menu images
       const menuURLs = await Promise.all(
         menuImages.map(async file => {
           const mRef = ref(storage, `users/${user.uid}/${Date.now()}-${file.name}`);
@@ -95,7 +84,6 @@ const PostOrder = () => {
         })
       );
 
-      // Save doc
       await addDoc(collection(db, 'postorder'), {
         businessname,
         description,
@@ -109,6 +97,8 @@ const PostOrder = () => {
         mobilenumber,
         name,
         vendorid: user.uid,
+        minprice: minPrice,
+        maxprice: maxPrice
       });
 
       alert('Service posted successfully!');
@@ -142,7 +132,7 @@ const PostOrder = () => {
               onChange={e => setEventname(e.target.value)}
               required
             >
-              {categories.map((cat) => (
+              {categories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -184,7 +174,6 @@ const PostOrder = () => {
             <input
               style={styles.input}
               type="date"
-              placeholder="From"
               value={from}
               onChange={e => setFrom(e.target.value)}
               required
@@ -208,6 +197,24 @@ const PostOrder = () => {
               required
             />
           </div>
+          <div style={styles.row}>
+            <input
+              style={styles.input}
+              type="number"
+              placeholder="Minimum Price"
+              value={minPrice}
+              onChange={e => setMinPrice(e.target.value)}
+              required
+            />
+            <input
+              style={styles.input}
+              type="number"
+              placeholder="Maximum Price"
+              value={maxPrice}
+              onChange={e => setMaxPrice(e.target.value)}
+              required
+            />
+          </div>
 
           <label style={styles.fileLabel}>
             Main Image *
@@ -220,11 +227,7 @@ const PostOrder = () => {
             />
             {imagePreview && (
               <div style={styles.previewContainer}>
-                <img
-                  src={imagePreview}
-                  alt="Main Preview"
-                  style={styles.imagePreview}
-                />
+                <img src={imagePreview} alt="Main Preview" style={styles.imagePreview} />
                 <span onClick={removeMainImage} style={styles.removeButton}>×</span>
               </div>
             )}
@@ -243,11 +246,7 @@ const PostOrder = () => {
             <div style={styles.menuImagePreviewContainer}>
               {menuImagePreviews.map((preview, idx) => (
                 <div key={idx} style={styles.previewContainer}>
-                  <img
-                    src={preview}
-                    alt={`Menu Preview ${idx+1}`}
-                    style={styles.imagePreview}
-                  />
+                  <img src={preview} alt={`Menu Preview ${idx + 1}`} style={styles.imagePreview} />
                   <span onClick={() => removeMenuImage(idx)} style={styles.removeButton}>×</span>
                 </div>
               ))}

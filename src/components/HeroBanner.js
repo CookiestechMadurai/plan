@@ -13,7 +13,7 @@ const HeroBanner = () => {
       />
       <div style={styles.textOverlay}>
         <h1 style={styles.title}>PLANORA</h1>
-        <p style={styles.subtitle}>Plan your events here</p>
+        <p style={styles.subtitle}>Plan your events perfectly</p>
       </div>
     </div>
   );

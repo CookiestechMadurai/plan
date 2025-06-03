@@ -13,6 +13,7 @@ const cities = [
   { name: 'Trichy', image: `${process.env.PUBLIC_URL}/images/trichy.jpg` },
   { name: 'Hosur', image: `${process.env.PUBLIC_URL}/images/hosur.jpg` },
   { name: 'Kodaikanal', image: `${process.env.PUBLIC_URL}/images/kodaikanal.jpg` },
+  { name: 'Thoothukudi', image: `${process.env.PUBLIC_URL}/images/kodaikanal.jpg` },
 ];
 
 const PopularCities = () => {

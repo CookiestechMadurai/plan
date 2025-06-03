@@ -1,6 +1,6 @@
 // src/components/CompanyDetail.jsx
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   doc,
   getDoc,
@@ -12,11 +12,13 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getAuth } from 'firebase/auth';
 import Navbar from './Navbar';
+import { useAuth } from '../contexts/AuthContext';
 
 const CompanyDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [company, setCompany] = useState(null);
   const [modalImage, setModalImage] = useState(null);
   const [showChat, setShowChat] = useState(false);
@@ -28,9 +30,6 @@ const CompanyDetail = () => {
   const [orderMobile, setOrderMobile] = useState('');
   const [orderDate, setOrderDate] = useState('');
   const [orderLocation, setOrderLocation] = useState('');
-
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
 
   useEffect(() => {
     const fetchCompany = async () => {
@@ -73,6 +72,10 @@ const CompanyDetail = () => {
   };
 
   const handlePlaceOrder = () => {
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
     setShowOrderModal(true);
   };
 
@@ -135,6 +138,19 @@ const CompanyDetail = () => {
           <InfoBox icon="fa-phone" label="Mobile" value={company.mobilenumber} />
           <InfoBox icon="fa-clock" label="Working Hours" value={company.hours} />
           <InfoBox icon="fa-briefcase" label="Experience" value={`${company.exprience} years`} />
+          {company.minprice && (
+            <InfoBox
+              icon="fa-tag"
+              label="Price"
+              value={
+                <div style={styles.priceValue}>
+                  <span style={styles.discountText}>M.R.P.</span>
+                  <span style={styles.originalPrice}>₹{Math.round(company.minprice * 1.1).toLocaleString()}</span>
+                  <span style={styles.discountedPrice}>₹{company.minprice.toLocaleString()}</span>
+                </div>
+              }
+            />
+          )}
         </div>
 
         <div style={styles.infoBox}>
@@ -169,7 +185,14 @@ const CompanyDetail = () => {
         <div style={styles.chatButtonWrapper}>
           <button
             style={styles.chatButton}
-            onClick={() => { setShowChat(true); fetchMessages(); }}
+            onClick={() => {
+              if (!currentUser) {
+                navigate('/login');
+                return;
+              }
+              setShowChat(true);
+              fetchMessages();
+            }}
           >
             Chat with Vendor
           </button>
@@ -277,6 +300,46 @@ const styles = {
   category: {
     fontSize: '18px',
     color: '#555',
+  },
+  priceContainer: {
+    marginTop: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  priceCard: {
+    backgroundColor: '#fff',
+    borderRadius: '10px',
+    padding: '16px',
+    marginTop: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    maxWidth: '320px',
+  },
+  priceCardTitle: {
+    margin: '0 0 12px 0',
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#005f7f',
+  },
+  discountText: {
+    color: '#e60000',
+    fontWeight: '700',
+    fontSize: '20px',
+  },
+  priceValue: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  discountedPrice: {
+    fontWeight: '700',
+    fontSize: '18px',
+    color: '#000',
+  },
+  originalPrice: {
+    fontSize: '14px',
+    color: '#555',
+    textDecoration: 'line-through',
   },
   mainImage: {
     width: '200px',

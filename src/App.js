@@ -16,7 +16,7 @@ const Cart = lazy(() => import('./pages/Cart')); // Lazy load Cart component
 // PrivateRoute component
 function PrivateRoute({ children }) {
   const { currentUser } = useAuth();
-  return currentUser ? children : <Navigate to="/" replace />;
+  return currentUser ? children : <Navigate to="/login" replace />;
 }
 
 // AppRoutes separated to allow access to AuthContext
@@ -27,28 +27,18 @@ function AppRoutes() {
     <Suspense fallback={<div>Loading...</div>}>
       <Routes>
         {/* Public routes */}
-        {!currentUser && <Route path="/" element={<Login />} />}
-        {!currentUser && <Route path="/signup" element={<Signup />} />}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
-        {/* Redirect to /home if already logged in and trying to access / or /signup */}
-        {currentUser && <Route path="/" element={<Navigate to="/home" replace />} />}
-        {currentUser && <Route path="/signup" element={<Navigate to="/home" replace />} />}
+        {/* Redirect to /home if already logged in and trying to access /signup */}
+        {currentUser && <Route path="/signup" element={<Navigate to="/" replace />} />}
 
         {/* Protected routes */}
         <Route
-          path="/home"
-          element={
-            <PrivateRoute>
-              <Home />
-            </PrivateRoute>
-          }
-        />
-        <Route
           path="/company/:id"
           element={
-            <PrivateRoute>
-              <CompanyDetail />
-            </PrivateRoute>
+            <CompanyDetail />
           }
         />
         <Route
@@ -94,7 +84,7 @@ function AppRoutes() {
           }
         />
         {/* Catch-all */}
-        <Route path="*" element={<Navigate to={currentUser ? "/home" : "/"} replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );
@@ -103,7 +93,7 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/plan">
+      <Router basename="/">
         <AppRoutes />
       </Router>
     </AuthProvider>
