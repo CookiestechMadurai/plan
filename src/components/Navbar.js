@@ -19,13 +19,30 @@ const categoriesList = [
   'Wedding', 'Beautician', 'Other'
 ];
 
-const Navbar = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const Navbar = () => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [companies, setCompanies] = useState([]);
+    const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [aiBoxOpen, setAiBoxOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState([]);
+    const [aiBoxOpen, setAiBoxOpen] = useState(false);
+    const [chatMessages, setChatMessages] = useState([]);
+    const sidebarRef = React.useRef(null);
+
+    React.useEffect(() => {
+      function handleClickOutside(event) {
+        if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+          setMenuOpen(false);
+        }
+      }
+      if (menuOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+      } else {
+        document.removeEventListener('mousedown', handleClickOutside);
+      }
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [menuOpen]);
 
   useEffect(() => {
     if (aiBoxOpen && chatMessages.length === 0) {
@@ -246,24 +263,62 @@ const Navbar = () => {
         </div>
 
         <div className="nav-right">
-          <ul className={`nav-links ${menuOpen ? 'active' : ''}`}>
-            <li onClick={() => handleNavClick('/home')}>Home</li>
-            <li onClick={() => handleNavClick('/orders')}>Orders</li>
-            <li onClick={() => handleNavClick('/post-order')}>Post Order</li>
-            <li onClick={handleAiButtonClick}><FaRobot /> AI</li>
-            <li onClick={() => handleNavClick('/profile')}><FaUser /> Profile</li>
-            <li onClick={() => handleNavClick('/messages')}><FaEnvelope /> Messages</li>
-            <li onClick={() => handleNavClick('/cart')}><FaShoppingCart /> Cart</li>
-          </ul>
-        </div>
-
-        <div className="hamburger" onClick={() => setMenuOpen(prev => !prev)}>
-          {menuOpen ? <FaTimes /> : <FaBars />}
+        <ul className={`nav-links ${menuOpen ? 'active' : ''}`}>
+          <li onClick={() => { handleNavClick('/home'); setMenuOpen(false); }}>Home</li>
+          <li onClick={() => { handleNavClick('/orders'); setMenuOpen(false); }}>Orders</li>
+          <li onClick={() => { handleNavClick('/post-order'); setMenuOpen(false); }}>Post Order</li>
+          <li onClick={() => { handleAiButtonClick(); setMenuOpen(false); }}><FaRobot /> AI</li>
+          <li onClick={() => { handleNavClick('/profile'); setMenuOpen(false); }}><FaUser /> Profile</li>
+          <li onClick={() => { handleNavClick('/messages'); setMenuOpen(false); }}><FaEnvelope /> Messages</li>
+          <li onClick={() => { handleNavClick('/cart'); setMenuOpen(false); }}><FaShoppingCart /> Cart</li>
+        </ul>
+          <div className="hamburger" onClick={() => setMenuOpen(prev => !prev)} aria-label="Toggle menu" role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setMenuOpen(prev => !prev); }}>
+            {menuOpen ? <FaTimes /> : <FaBars />}
+          </div>
         </div>
       </div>
 
+      {menuOpen && (
+        <>
+          <div className="overlay" onClick={() => setMenuOpen(false)}></div>
+          <div className="sidebar-menu">
+            <div className="sidebar-header">
+              <div className="sidebar-logo" onClick={() => { navigate('/home'); setMenuOpen(false); }}>Planora</div>
+              <div className="close-icon" onClick={() => setMenuOpen(false)} aria-label="Close menu" role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setMenuOpen(false); }}>
+                <FaTimes />
+              </div>
+            </div>
+            <div className="sidebar-section">
+              <h3>Menu</h3>
+            <ul className="sidebar-menu-list">
+              <li onClick={() => { handleNavClick('/home'); setMenuOpen(false); }} className="sidebar-menu-item">Home</li>
+              <li onClick={() => { handleNavClick('/orders'); setMenuOpen(false); }} className="sidebar-menu-item">Orders</li>
+              <li onClick={() => { handleNavClick('/post-order'); setMenuOpen(false); }} className="sidebar-menu-item">Post Order</li>
+              <li onClick={() => { handleAiButtonClick(); setMenuOpen(false); }} className="sidebar-menu-item ai-button"><FaRobot /> AI</li>
+              <li onClick={() => { handleNavClick('/profile'); setMenuOpen(false); }} className="sidebar-menu-item">Profile</li>
+              <li onClick={() => { handleNavClick('/messages'); setMenuOpen(false); }} className="sidebar-menu-item">Messages</li>
+              <li onClick={() => { handleNavClick('/cart'); setMenuOpen(false); }} className="sidebar-menu-item">Cart</li>
+            </ul>
+            </div>
+            {/* Additional sections can be added here */}
+          </div>
+        </>
+      )}
+
+
       {aiBoxOpen && (
-        <div className="ai-chat-box">
+        <div className="ai-chat-box" role="dialog" aria-modal="true" aria-labelledby="ai-chat-header">
+          <div className="ai-chat-header" id="ai-chat-header">
+            <div>AI Chat</div>
+            <button
+              className="ai-chat-close"
+              onClick={() => setAiBoxOpen(false)}
+              aria-label="Close AI chat"
+              type="button"
+            >
+              <FaTimes />
+            </button>
+          </div>
           <div className="chat-messages">
             {chatMessages.map((msg, index) => (
               <div
@@ -344,7 +399,7 @@ const Navbar = () => {
         </div>
       )}
 
-      <style>{`
+        <style>{`
         * {
           box-sizing: border-box;
           margin: 0;
@@ -367,18 +422,21 @@ const Navbar = () => {
 
         .nav-left {
           flex: 1;
+          order: 1;
         }
 
         .nav-center {
           flex: 2;
           display: flex;
           justify-content: center;
+          order: 2;
         }
 
         .nav-right {
           flex: 2;
           display: flex;
           justify-content: flex-end;
+          order: 3;
         }
 
         .navbar-logo {
@@ -448,6 +506,29 @@ const Navbar = () => {
           display: flex;
           gap: 1.9rem;
           align-items: center;
+        }
+        @media (max-width: 768px) {
+          .nav-links {
+            display: none !important;
+          }
+          .nav-links.active {
+            display: flex !important;
+            flex-direction: column;
+            width: 100%;
+            background-color: #003f66;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            padding: 1rem 0;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+          }
+          .nav-links li {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: normal;
+          }
         }
 
         .nav-links li {
@@ -608,6 +689,42 @@ const Navbar = () => {
             bottom: 10px;
             max-height: 400px;
           }
+          .hamburger {
+            display: block;
+          }
+          .nav-links {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            background-color: #003f66;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            padding: 1rem 0;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+          }
+          .nav-links.active {
+            display: flex;
+          }
+          .nav-links li {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: normal;
+          }
+          .nav-center {
+            order: 3;
+            width: 100%;
+            margin-top: 0.5rem;
+            justify-content: flex-start;
+          }
+          .nav-left {
+            flex: none;
+          }
+          .nav-right {
+            flex: none;
+          }
         }
         .budget-slider-container {
           display: flex;
@@ -650,6 +767,68 @@ const Navbar = () => {
           color: #fff;
           font-size: 1rem;
           text-align: center;
+        }
+        @media (max-width: 768px) {
+          .sidebar-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+          }
+          .sidebar-menu-item {
+            padding: 15px 20px;
+            margin: 8px 15px;
+            border-radius: 12px;
+            background-color: #005a8c;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            user-select: none;
+          }
+          .sidebar-menu-item:hover {
+            background-color: #0078d7;
+          }
+          .sidebar-menu-item.ai-button {
+            background-color: #0e6eb8;
+            font-weight: 600;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+          }
+          .ai-chat-box {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 600px;
+            background: #ffffff;
+            color: #333333;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1500;
+          }
+          .ai-chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: #003f66;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+          }
+          .ai-chat-close {
+            cursor: pointer;
+            font-size: 1.5rem;
+          }
         }
       `}</style>
     </nav>

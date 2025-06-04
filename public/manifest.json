@@ -18,12 +18,12 @@
       "type": "image/png"
     }
   ],
-  "start_url": "/",
+  "start_url": "/plan/",
   "display": "standalone",
   "theme_color": "#003f66",
   "background_color": "#ffffff",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": "/plan/",
   "description": "Planora is a powerful web app to explore businesses by city.",
   "lang": "en"
 }
