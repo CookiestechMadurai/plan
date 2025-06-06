@@ -150,15 +150,14 @@ const categoriesList = [
       companiesList = companiesList.filter(c => c.minprice <= Number(budgetLimit));
       if (companiesList.length === 0) {
         addMessage('claura', 'No companies found under your budget and selected categories.');
+        setCompanies([]);
       } else {
-        addMessage('claura', 'Here are the companies under your budget:');
-        companiesList.forEach(c => {
-          addMessage('claura', `${c.businessname} - Minimum Price: ${c.minprice}`);
-        });
+        setCompanies(companiesList);
       }
     } catch (err) {
       console.error('Error fetching companies:', err);
       addMessage('claura', 'Sorry, there was an error fetching companies.');
+      setCompanies([]);
     } finally {
       setLoading(false);
     }
@@ -309,7 +308,7 @@ const categoriesList = [
       {aiBoxOpen && (
         <div className="ai-chat-box" role="dialog" aria-modal="true" aria-labelledby="ai-chat-header">
           <div className="ai-chat-header" id="ai-chat-header">
-            <div>AI Chat</div>
+            <div className="ai-chat-title">AI Assistant</div>
             <button
               className="ai-chat-close"
               onClick={() => setAiBoxOpen(false)}
@@ -330,6 +329,47 @@ const categoriesList = [
             ))}
             <div ref={chatEndRef} />
           </div>
+
+          {chatStep === 'results' && companies.length > 0 && (
+            <div className="company-results">
+              {companies.map(company => (
+                <div
+                  key={company.id}
+                  className="company-item"
+                  onClick={() => {
+                    navigate(`/company/${company.id}`);
+                    setAiBoxOpen(false);
+                    setCompanies([]);
+                    setChatStep('initial');
+                    setChatMessages([{ sender: 'claura', text: 'Hi, welcome this is ms.Claura your ai assistant. Say hi to begin' }]);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      navigate(`/company/${company.id}`);
+                      setAiBoxOpen(false);
+                      setCompanies([]);
+                      setChatStep('initial');
+                      setChatMessages([{ sender: 'claura', text: 'Hi, welcome this is ms.Claura your ai assistant. Say hi to begin' }]);
+                    }
+                  }}
+                >
+                  <img
+                    src={company.image || '/images/default.jpg'}
+                    alt={company.businessname}
+                    className="company-image"
+                    onError={e => (e.target.style.display = 'none')}
+                  />
+                  <div className="company-info">
+                    <div className="company-name">{company.businessname}</div>
+                    <div className="company-price">Min Price: ₹{company.minprice?.toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {chatStep === 'categories' ? (
             <div className="categories-buttons">
               {categoriesList.map(category => (
@@ -561,6 +601,228 @@ const categoriesList = [
           overflow: hidden;
           z-index: 1100;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .ai-chat-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 16px;
+          background-color: #005f7f;
+          color: white;
+          font-weight: 700;
+          font-size: 1.25rem;
+          border-top-left-radius: 12px;
+          border-top-right-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0, 95, 127, 0.6);
+        }
+
+        .ai-chat-title {
+          font-weight: 700;
+          font-size: 1.25rem;
+          color: white;
+        }
+
+        .ai-chat-close {
+          background: none;
+          border: none;
+          color: white;
+          font-size: 1.5rem;
+          cursor: pointer;
+          transition: color 0.3s ease;
+        }
+
+        .ai-chat-close:hover {
+          color: #ff4d4d;
+        }
+
+        .company-results {
+          overflow-y: auto;
+          max-height: 300px;
+          padding: 10px;
+          border-top: 1px solid #ddd;
+          background-color: #f9f9f9;
+          border-radius: 0 0 12px 12px;
+        }
+
+        .company-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: background-color 0.3s ease, box-shadow 0.3s ease;
+          border: 1px solid transparent;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+          background-color: #fff;
+        }
+
+        .company-item:hover, .company-item:focus {
+          background-color: #e0f7fa;
+          border-color: #00acc1;
+          outline: none;
+          box-shadow: 0 4px 12px rgba(0,172,193,0.3);
+        }
+
+        .company-image {
+          width: 60px;
+          height: 60px;
+          object-fit: cover;
+          border-radius: 8px;
+          flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          border: 1px solid #ddd;
+        }
+
+        .company-info {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .company-name {
+          font-weight: 700;
+          font-size: 1.1rem;
+          color: #00796b;
+          margin-bottom: 4px;
+        }
+
+        .company-price {
+          font-size: 0.95rem;
+          color: #555;
+          font-weight: 600;
+        }
+
+        .chat-messages {
+          flex: 1;
+          padding: 1rem;
+          overflow-y: auto;
+          background: #fefefe;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          border-bottom: 1px solid #ddd;
+        }
+
+        .chat-message {
+          max-width: 80%;
+          padding: 14px 22px;
+          border-radius: 24px;
+          font-size: 1rem;
+          line-height: 1.5;
+          word-wrap: break-word;
+          white-space: pre-wrap;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .chat-message.claura {
+          background: #0078d7;
+          color: #fff;
+          align-self: flex-start;
+          border-bottom-left-radius: 0;
+          box-shadow: 0 4px 12px rgba(0,120,215,0.3);
+        }
+
+        .chat-message.user {
+          background: #e1e1e1;
+          color: #333;
+          align-self: flex-end;
+          border-bottom-right-radius: 0;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .chat-input-form {
+          display: flex;
+          padding: 12px 16px;
+          background: #f5f5f5;
+          border-top: 1px solid #ddd;
+          border-bottom-left-radius: 12px;
+          border-bottom-right-radius: 12px;
+        }
+
+        .chat-input-form input {
+          flex: 1;
+          border: none;
+          border-radius: 20px;
+          padding: 12px 18px;
+          font-size: 1rem;
+          background: #fff;
+          color: #333;
+          outline: none;
+          box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+          transition: box-shadow 0.3s ease;
+        }
+
+        .chat-input-form input:focus {
+          box-shadow: inset 0 1px 6px rgba(0,120,215,0.4);
+        }
+
+        .chat-input-form button {
+          background: #0078d7;
+          border: none;
+          color: white;
+          padding: 0 24px;
+          margin-left: 12px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 1rem;
+          font-weight: 600;
+          transition: background-color 0.3s ease;
+        }
+
+        .chat-input-form button:hover {
+          background-color: #005a99;
+        }
+
+        .company-results {
+          overflow-y: auto;
+          max-height: 300px;
+          padding: 10px;
+          border-top: 1px solid #ddd;
+          background-color: #f9f9f9;
+          border-radius: 0 0 12px 12px;
+        }
+
+        .company-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          border: 1px solid transparent;
+        }
+
+        .company-item:hover, .company-item:focus {
+          background-color: #e0f7fa;
+          border-color: #00acc1;
+          outline: none;
+        }
+
+        .company-image {
+          width: 50px;
+          height: 50px;
+          object-fit: cover;
+          border-radius: 6px;
+          flex-shrink: 0;
+        }
+
+        .company-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .company-name {
+          font-weight: 600;
+          font-size: 1rem;
+          color: #00796b;
+        }
+
+        .company-price {
+          font-size: 0.875rem;
+          color: #555;
         }
 
         .chat-messages {
