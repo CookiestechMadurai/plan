@@ -12,6 +12,7 @@ const MessagePage = lazy(() => import('./pages/MessagePage'));
 const PostOrder = lazy(() => import('./pages/PostOrder'));
 const Orders = lazy(() => import('./pages/Orders')); // Lazy load Orders component
 const Cart = lazy(() => import('./pages/Cart')); // Lazy load Cart component
+const CategoryCompanies = lazy(() => import('./pages/CategoryCompanies'));
 
 // PrivateRoute component
 function PrivateRoute({ children }) {
@@ -85,6 +86,7 @@ function AppRoutes() {
         />
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/category/:categoryName" element={<CategoryCompanies />} />
       </Routes>
     </Suspense>
   );

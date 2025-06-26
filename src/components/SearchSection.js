@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const categories = [
   { name: 'Photography', image: process.env.PUBLIC_URL + '/images/photography.jpg' },
@@ -22,8 +20,6 @@ const categories = [
 
 const SearchSection = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [results, setResults] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [showAll, setShowAll] = useState(false);
   const navigate = useNavigate();
 
@@ -37,28 +33,8 @@ const SearchSection = () => {
       ? categories
       : categories.slice(0, 8);
 
-  const handleCategoryClick = async (categoryName) => {
-    setSelectedCategory(categoryName);
-    try {
-      const q = query(
-        collection(db, 'postorder'),
-        where('eventname', '==', categoryName)
-      );
-      const querySnapshot = await getDocs(q);
-
-      const fetchedResults = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      setResults(fetchedResults);
-    } catch (err) {
-      console.error('Error fetching companies:', err);
-    }
-  };
-
-  const handleCompanyClick = (id) => {
-    navigate(`/company/${id}`);
+  const handleCategoryClick = (categoryName) => {
+    navigate(`/category/${categoryName}`);
   };
 
   return (
@@ -89,25 +65,6 @@ const SearchSection = () => {
           </button>
         </div>
       )}
-
-      {/* Results Section */}
-      <div style={styles.resultContainer}>
-        {results.length > 0 && <h2 style={styles.resultHeading}>Companies Offering {selectedCategory}</h2>}
-        {results.length === 0 && selectedCategory && (
-          <p style={styles.noResults}>No companies found for "{selectedCategory}"</p>
-        )}
-        <div style={styles.scrollRow}>
-          {results.map((item) => (
-            <div key={item.id} style={styles.resultCard} onClick={() => handleCompanyClick(item.id)}>
-              <img src={item.image || (process.env.PUBLIC_URL + '/images/default.jpg')} alt={item.businessname} style={styles.resultImage} />
-              <div>
-                <h3 style={styles.companyName}>{item.businessname || 'No Name'}</h3>
-                <p style={styles.location}>{item.location || 'Unknown Location'}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };
@@ -141,9 +98,6 @@ const styles = {
   card: {
     width: '100%',
     height: '150px',
-    // backgroundColor: '#ffffff',
-    // border: '1px solid #ddd',
-    // borderRadius: '12px',
     textAlign: 'center',
     padding: '10px',
     boxSizing: 'border-box',
@@ -169,50 +123,6 @@ const styles = {
     borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: 'bold'
-  },
-  resultContainer: {
-    marginTop: '30px'
-  },
-  resultHeading: {
-    color: '#ffffff',
-    marginBottom: '15px'
-  },
-  noResults: {
-    color: '#ffffff',
-    fontStyle: 'italic'
-  },
-  scrollRow: {
-    display: 'flex',
-    gap: '20px',
-    overflowX: 'auto',
-    paddingBottom: '10px'
-  },
-  resultCard: {
-    minWidth: '200px',
-    flex: '0 0 auto',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    padding: '10px',
-    border: '1px solid #eee',
-    borderRadius: '8px',
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    cursor: 'pointer'
-  },
-  resultImage: {
-    width: '100%',
-    height: '120px',
-    objectFit: 'cover',
-    borderRadius: '8px'
-  },
-  companyName: {
-    color: '#003f66',
-    fontWeight: 'bold',
-    marginBottom: '5px'
-  },
-  location: {
-    color: '#666'
   }
 };
 
